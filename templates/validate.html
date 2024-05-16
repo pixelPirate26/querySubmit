@@ -1,0 +1,30 @@
+<!-- templates/validate.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Validate Query</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Validate Query</h1>
+    {% for pair in pairs %}
+    <div>
+        <h3>Query:</h3>
+        <pre>{{ pair.query }}</pre>
+        <h3>Question:</h3>
+        <p>{{ pair.question }}</p>
+        <form action="{{ url_for('validate') }}" method="post">
+            <input type="hidden" name="pair_id" value="{{ pair.id }}">
+            <label>
+                <input type="radio" name="is_valid" value="true" required> Valid
+            </label>
+            <label>
+                <input type="radio" name="is_valid" value="false" required> Invalid
+            </label>
+            <textarea name="remarks" placeholder="Remarks" {% if is_valid == 'true' %}disabled{% endif %}></textarea>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    {% endfor %}
+</body>
+</html>
