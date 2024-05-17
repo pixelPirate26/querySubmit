@@ -9,23 +9,22 @@ app.secret_key = 'your_secret_key'
 # PostgreSQL connection details
 conn = psycopg2.connect(
     host="localhost",
-    database="banavo2",
+    database="test",
     user="test",
     password="test",
-    port=5432  # Change the port number here if needed
+    port=5432 
 )
 
 QueryPair = namedtuple('QueryPair', ['id', 'query', 'question', 'username'])
-pairs = []  # List to store the submitted query-question pairs
+pairs = []  # submitted query-question pairs
 
-# List of validator usernames
+
 validator_usernames = ['admin1', 'admin2', 'admin3', 'admin4', 'admin5', 'admin6']
 
-# List of questioner usernames
 questioner_usernames = ['student1', 'student2', 'student3', 'student4', 'student5', 'student6', 'student7', 'student8',
                         'student9', 'student10', 'student11', 'student12', 'student13', 'student14']
 
-# Route decorators to prevent access without login
+
 def login_required(func):
     def wrapper(*args, **kwargs):
         if 'username' not in session:
@@ -37,7 +36,7 @@ def login_required(func):
 @app.before_request
 def make_session_permanent():
     session.permanent = True
-    app.permanent_session_lifetime = 120  # Session lifetime in seconds (1 hour)
+    app.permanent_session_lifetime = 120  # Session lifetime in seconds 
 
 @app.teardown_appcontext
 def remove_session(exception=None):
@@ -175,7 +174,7 @@ def login():
 
     # Check if the username is in the validator list
     if username in validator_usernames:
-        # Implement your authentication logic for validators
+        
         if password == 'admin':
             session['username'] = username
             session['role'] = 'validator'
@@ -183,13 +182,16 @@ def login():
 
     # Check if the username is in the questioner list
     elif username in questioner_usernames:
-        # Implement your authentication logic for questioners
+
         if password == 'student':
             session['username'] = username
             session['role'] = 'questioner'
             return redirect('/submit_query')
 
     return 'Invalid username or password'
+    # Invalid login - Render login page with error message
+    # error_message = "Invalid username or password"
+    # return redirect('/login', error = )
 
 @app.route('/submit_query', methods=['GET', 'POST'])
 @login_required
@@ -198,29 +200,48 @@ def submit_query():
         return redirect(url_for('index'))
 
     if request.method == 'POST':
-        query = request.form['query'].strip()
-        question = request.form['question'].strip()
+        if 'execute' in request.form:  # Execute the query
+            query = request.form['query'].strip()
+            if not query:
+                flash('Query cannot be empty')
+                return redirect(url_for('submit_query'))
 
-        if not query:
-            return 'Query cannot be empty', 400
-        if not question:
-            return 'Question cannot be empty', 400
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute(query)
+                    result = cursor.fetchall()  # Get the query result
+                conn.commit()  # Commit the transaction if the query is successful
+            except psycopg2.Error as e:
+                conn.rollback()  # Rollback the transaction if there's an error
+                flash(f'Error executing query: {e}')
+                return redirect(url_for('submit_query'))
 
-        # Execute the submitted query on the database
-        try:
-            with conn.cursor() as cursor:
-                cursor.execute(query)
-                # Check if the query executed successfully
-                # You can modify this condition based on your requirements
-                if cursor.rowcount == 0:
-                    raise psycopg2.Error("No rows affected")
-        except psycopg2.Error as e:
-            flash(f'Error executing query: {e}')
-            return redirect(url_for('submit_query'))
+            return render_template('index.html', query=query, result=result, question=request.form['question'])
 
-        pair_id = len(pairs) + 1
-        pairs.append(QueryPair(pair_id, query, question, session['username']))
-        return 'Query-question pair submitted successfully'
+        elif 'submit' in request.form:  # Submit the query-question pair
+            query = request.form['query'].strip()
+            question = request.form['question'].strip()
+
+            if not query:
+                return 'Query cannot be empty', 400
+            if not question:
+                return 'Question cannot be empty', 400
+
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute(query)
+                    
+                    if cursor.rowcount == 0:
+                        raise psycopg2.Error("No rows affected")
+                conn.commit()  
+            except psycopg2.Error as e:
+                conn.rollback()  
+                flash(f'Error executing query: {e}')
+                return redirect(url_for('submit_query'))
+
+            pair_id = len(pairs) + 1
+            pairs.append(QueryPair(pair_id, query, question, session['username']))
+            return 'Query-question pair submitted successfully'
 
     # Check if the route was accessed with pre-populated data
     query = request.args.get('query', '')
@@ -248,9 +269,8 @@ def validate():
                 questioner_username = pair.username
                 return redirect(url_for('submit_query', query=pair.query, question=pair.question, remarks=remarks))
 
-        # Implement your validation logic here
-        # You can update the pair in the `pairs` list or store the validation result in a database
-
+        # ToDO Implement validation logic 
+        
         return 'Validation submitted successfully'
 
     return render_template('validate.html', pairs=pairs)
@@ -259,5 +279,10 @@ def validate():
 def method_not_allowed(e):
     return redirect(url_for('index'))
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    return render_template('logout.html')
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5123)  # Change the port number here if needed
+    app.run(debug=True, port=5123) 

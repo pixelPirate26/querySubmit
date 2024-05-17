@@ -20,12 +20,17 @@
         <label for="question">Enter your question:</label>
         <input type="text" id="question" name="question" value="{{ question }}">
         <label for="query">Enter your query:</label>
-        <textarea id="query" name="query">{{ query }}</textarea>
+        <textarea id="query" name="query">{{ query if query else '' }}</textarea>
         {% if remarks %}
         <label for="remarks">Remarks:</label>
         <textarea id="remarks" name="remarks" readonly>{{ remarks }}</textarea>
         {% endif %}
-        <button type="submit">Submit</button>
+        <button type="submit" name="execute">Execute</button>
+        <button type="submit" name="submit" {% if not result %}disabled{% endif %}>Submit</button>
     </form>
+    {% if result %}
+    <h2>Query Result:</h2>
+    <pre>{{ result }}</pre>
+    {% endif %}
 </body>
 </html>
