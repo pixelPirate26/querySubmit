@@ -4,12 +4,12 @@ from collections import namedtuple
 from werkzeug.exceptions import MethodNotAllowed
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = 'SpeakQL_Portal'
 
 # PostgreSQL connection details
 conn = psycopg2.connect(
     host="localhost",
-    database="test",
+    database="banavo2",
     user="test",
     password="test",
     port=5432 
@@ -18,12 +18,9 @@ conn = psycopg2.connect(
 QueryPair = namedtuple('QueryPair', ['id', 'query', 'question', 'username'])
 pairs = []  # submitted query-question pairs
 
-
 validator_usernames = ['admin1', 'admin2', 'admin3', 'admin4', 'admin5', 'admin6']
-
 questioner_usernames = ['student1', 'student2', 'student3', 'student4', 'student5', 'student6', 'student7', 'student8',
                         'student9', 'student10', 'student11', 'student12', 'student13', 'student14']
-
 
 def login_required(func):
     def wrapper(*args, **kwargs):
@@ -56,7 +53,7 @@ def index():
     particles_config = {
         "particles": {
             "number": {
-                "value": 80,
+                "value": 90,
                 "density": {
                     "enable": True,
                     "value_area": 800
@@ -144,7 +141,7 @@ def index():
                 },
                 "bubble": {
                     "distance": 400,
-                    "size": 40,
+                    "size": 36,
                     "duration": 2,
                     "opacity": 0.5,
                     "speed": 3
@@ -165,33 +162,24 @@ def index():
     }
 
     return render_template('login.html', particles_config=particles_config)
-    #return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form['username']
     password = request.form['password']
 
-    # Check if the username is in the validator list
-    if username in validator_usernames:
-        
-        if password == 'admin':
-            session['username'] = username
-            session['role'] = 'validator'
-            return redirect('/validate')
+    if username in validator_usernames and password == 'admin':
+        session['username'] = username
+        session['role'] = 'validator'
+        return redirect('/validate')
+    elif username in questioner_usernames and password == 'student':
+        session['username'] = username
+        session['role'] = 'questioner'
+        return redirect('/submit_query')
+    else:
+        flash('Invalid username or password', 'error')
+        return redirect(url_for('index'))
 
-    # Check if the username is in the questioner list
-    elif username in questioner_usernames:
-
-        if password == 'student':
-            session['username'] = username
-            session['role'] = 'questioner'
-            return redirect('/submit_query')
-
-    return 'Invalid username or password'
-    # Invalid login - Render login page with error message
-    # error_message = "Invalid username or password"
-    # return redirect('/login', error = )
 
 @app.route('/submit_query', methods=['GET', 'POST'])
 @login_required
@@ -230,7 +218,6 @@ def submit_query():
             try:
                 with conn.cursor() as cursor:
                     cursor.execute(query)
-                    
                     if cursor.rowcount == 0:
                         raise psycopg2.Error("No rows affected")
                 conn.commit()  
@@ -282,7 +269,8 @@ def method_not_allowed(e):
 @app.route('/logout')
 def logout():
     session.clear()
-    return render_template('logout.html')
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5123) 
+    app.run(debug=True, port=5123)

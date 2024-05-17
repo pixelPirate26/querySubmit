@@ -67,9 +67,10 @@ body {
   
   button[type="submit"] {
     padding: 12px 20px;
-    background-color: #4CAF50;
+    background-color: #126616;
     color: #fff;
     border: none;
+    font-weight: bold;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
@@ -78,7 +79,7 @@ body {
   }
   
   button[type="submit"]:hover {
-    background-color: #45a049;
+    background-color: #30b637;
   }
   
   /* Media query for smaller screens */
@@ -140,4 +141,59 @@ body {
   .count-particles {
     border-radius: 0 0 3px 3px;
   }
-  
+.flash-messages {
+  margin-bottom: 10px;
+  position: relative;
+  width: 100%;
+  text-align: center;
+  z-index: 2; /* Ensure it is above particles */
+}
+
+.flash {
+  display: inline-block;
+  padding: 10px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.flash.error {
+  background-color: #ff4d4d; /* Bright red background */
+  color: #fff; /* White text */
+  border: 1px solid #ff1a1a; /* Darker red border */
+  font-size: large;
+  font: sans-serif;
+}
+
+.flash.success {
+  background-color: #4dff4d; /* Bright green background */
+  color: #fff; /* White text */
+  border: 1px solid #1aff1a; /* Darker green border */
+}
+.flash-messages {
+  margin-top: 15px;
+  position: relative;
+  width: 100%;
+  text-align: center;
+  z-index: 2; /* Ensure it is above particles */
+}
+
+.flash {
+  display: inline-block;
+  padding: 10px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.flash.error {
+  background-color: #ac2727; /* Bright red background */
+  color: #fff; /* White text */
+  border: 1px solid #bb0202; /* Darker red border */
+}
+
+.flash.success {
+  background-color: #4dff4d; /* Bright green background */
+  color: #fff; /* White text */
+  border: 1px solid #1aff1a; /* Darker green border */
+}
