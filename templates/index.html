@@ -7,16 +7,19 @@
 </head>
 <body>
     <h1>Submit Query</h1>
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
     <ul class="flash-messages">
-        {% for message in messages %}
-        <li>{{ message }}</li>
-        {% endfor %}
+        {% for category, message in messages %}
+    <li class="alert alert-{{ category }}">
+        {{ message }}
+    </li>
+    {% endfor %}
     </ul>
     {% endif %}
     {% endwith %}
-    <form action="{{ url_for('submit_query') }}" method="post">
+
+    <form action="{{ url_for('submit_query') }}" method="post" >
         <label for="question">Enter your question:</label>
         <input type="text" id="question" name="question" value="{{ question }}">
         <label for="query">Enter your query:</label>
@@ -30,7 +33,9 @@
     </form>
     {% if result %}
     <h2>Query Result:</h2>
-    <pre>{{ result }}</pre>
-    {% endif %}
+    <div class="result-container">
+    <pre>{{ result|safe }}</pre>
+</div>
+{% endif %}
 </body>
 </html>
